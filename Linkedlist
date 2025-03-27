@@ -1,0 +1,29 @@
+
+
+public class linkedlist {
+	linkedlist next, back;
+	String value;
+	//value is the text, next is the next one in the chain and back is the one behind it.
+	//V is the line number p is the position in the line, starting from the semicolon.
+	int V,p;
+	public linkedlist(linkedlist next, String value,linkedlist back, int V,int p) {
+		this.next=next;
+		this.value=value;
+		this.back=back;
+		this.V=V;
+		this.p=p;
+	}
+	public linkedlist(String value,int V,int p) {
+		this.value=value;		
+		this.V=V;
+		this.p=p;
+	}
+	public linkedlist(String value,linkedlist back, int V,int p) {
+		this.value=value;
+		this.back=back;
+		this.V=V;
+		this.p=p;
+	}
+	
+	
+}
