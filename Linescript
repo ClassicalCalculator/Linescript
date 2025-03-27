@@ -163,7 +163,7 @@ public class linescript {
 	//evaluates strings cause there can be functions so that needs to be accounted for
 	
 	public static String Stringeval(String line) {
-		String s="";
+		String s=line;
 		if(line.length()>4&&line.charAt(0)=='i'&&line.charAt(1)=='n'&&line.charAt(2)=='p'&&line.charAt(3)=='u'&&line.charAt(4)=='t')
 			//input
 			s=kb.next();
