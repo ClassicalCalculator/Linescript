@@ -1,0 +1,214 @@
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+public class linescript {
+	static Scanner kb = new Scanner(System.in);
+	static List<String> code = new ArrayList<>();
+	static linkedlist head = new linkedlist("",1,0);
+
+	public static void main(String[] args) {
+		File fileObj = new File("Linescript.txt");
+		try (BufferedReader reader = new BufferedReader(new FileReader(fileObj))) {
+			String line;
+			while ((line = reader.readLine()) != null) {
+				code.add(line);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		if (code.size()==0)
+			error();
+		if(code.get(1).length()==0)
+			error();
+		if (code.get(1).indexOf(';')==-1)
+			error();
+		head.value=code.get(1).substring(0,code.get(1).indexOf(';'));
+		//while the stack isnt empty evaluate the head of the stack then pop it off the stack. 
+		//there is the question of how does the stack work with running.
+		//the return value of eval decides what happens. if its 1 then you do that stuff with the h
+		// finish in comp sci
+		while (head != null) {
+			boolean a =eval(head);
+			int t=head.V;
+			int P=head.p;
+			head=head.back;
+			int T=code.get(t).indexOf(';',P);
+			if (!a) {
+			if(T!=-1) {
+				linkedlist Head = new linkedlist(head.value.substring(t,T),head,T,head.p);
+				head=Head;
+				}
+			}
+			else {
+				linkedlist Head = new linkedlist(head,head.back.value.substring(t,T),head.back,T,head.back.p);
+				head.back=Head;
+			}
+		}
+	}
+
+	public static boolean eval(linkedlist link) {
+		String line =link.value;
+		char[] L = new char[line.length()];
+		L = line.toCharArray();
+		if (line.length() >= 6) {
+			//run
+			if ((L[0] == 'r' && L[1] == 'u' && L[2] == 'n' && L[3] == '(')
+					|| (L[0] == 'R' && L[1] == 'U' && L[2] == 'N' && L[3] == '(')) {
+				int i =line.indexOf(')');
+				int l=numeval(link.V,line.substring(4,i))+1;
+				String newline=code.get(l);
+				int j =newline.indexOf(';');
+				linkedlist Head =new linkedlist(newline.substring(j),head,l,j);
+				head=Head;
+				return true;
+				//figure something out for run.
+			}
+			//write
+			if (L[0] == 'w' && L[1] == 'r' && L[2] == 'i' && L[3] == 't' &&L[4]=='e'&&L[5]=='(') {
+				int i =line.indexOf(',');
+				int j =line.indexOf(')');
+				int l=numeval(link.V,line.substring(0,i));
+				String s =Stringeval(line.substring(i,j));
+				code.set(l,s);
+			}
+			//create
+			else if (L.length>8&&L[0] == 'c' && L[1] == 'r' && L[2] == 'e' && L[3] == 'a' &&L[4]=='t'&&L[5]=='e' && L[6]=='(') {
+				int j =line.indexOf(')');
+				int l=numeval(link.V,line.substring(0,j));
+				code.add(l,"");
+			}
+			//delete
+			else if (L.length>8&&L[0] == 'd' && L[1] == 'e' && L[2] == 'l' && L[3] == 'e' &&L[4]=='t'&&L[5]=='e' && L[6]=='(') {
+				int j =line.indexOf(')');
+				int l=numeval(link.V,line.substring(0,j));
+				code.remove(l);
+			}
+			//output
+			else if (line.startsWith("delete(")) {
+			    int closing = line.indexOf(')');
+			    // Extract argument inside delete(...)
+			    int targetLine = numeval(link.V, line.substring(7, closing));
+			    // Adjust for zero-indexed ArrayList if needed
+			    int indexToRemove = targetLine - 1; 
+			    if(indexToRemove >= 0 && indexToRemove < code.size()){
+			        code.remove(indexToRemove);
+			    } else {
+			        error();
+			    }
+			    }
+			    else if (line.startsWith("output(")) //output
+			    	System.out.println(Stringeval(line.substring(7,line.indexOf(')'))));
+			}
+		return false;
+	}
+	//numeval and Stringeval take the line number and a string. they then evaluate it. eval takes a linkedlist node.
+	public static int numeval(int L,String line) {
+		int n=0;
+		if (line.length()>3&&line.charAt(0)=='l'&&line.charAt(1)=='i'&&line.charAt(2)=='n'&&line.charAt(3)=='e')
+			n=L;
+		//line
+		else if(line.length()>4&&line.charAt(0)=='i'&&line.charAt(1)=='n'&&line.charAt(2)=='p'&&line.charAt(3)=='u'&&line.charAt(3)=='t')
+			//input
+			n=kb.nextInt();
+		else if(line.length()>12&&line.charAt(0)=='s'&&line.charAt(1)=='e'&&line.charAt(2)=='g'&&line.charAt(3)=='m'&&line.charAt(4)=='e'&&line.charAt(5)=='n'&&line.charAt(6)=='t'&&line.charAt(7)=='(') {
+			//segment. finds the 9 then the two commas and closing parens then sets n to the numeval of the substring of that line.
+			int S=line.indexOf('(');
+			int i=line.indexOf(',');
+			int j=line.substring(i++).indexOf(',');
+			int k = line.indexOf(')');
+			int l1=numeval(L,line.substring(S,i));
+			int l2=numeval(L,line.substring(i,j));
+			int l3=numeval(L,line.substring(j,k));
+			n=numeval(L,code.get(l3).substring(l1,l2));
+		}
+		else if (line.length()>7&&line.charAt(0)=='c'&&line.charAt(1)=='m'&&line.charAt(2)=='p') {
+			int i=line.indexOf(',');
+			int k = line.indexOf(')');
+			String s1=line.substring(4,i);
+			String s2=line.substring(i,k);
+			n=(s1.equals(s2))?1:0;
+			//cmp
+	}
+	
+		else if(line.length()>11&&line.charAt(0)=='c'&&line.charAt(1)=='o'&&line.charAt(2)=='n'&&line.charAt(3)=='c'&&line.charAt(4)=='a'&&line.charAt(5)=='t'){
+			//concatenation
+			int S=line.indexOf('(');
+			int i=line.indexOf(',');
+			int k = line.indexOf(')');
+			String l1=line.substring(S,i);
+			String l2=line.substring(i,k);
+			n=numeval(L,l1+l2);
+		}
+		else if(line.length()>11&&line.charAt(0)=='g'&&line.charAt(1)=='e'&&line.charAt(2)=='t'&&line.charAt(3)=='l'&&line.charAt(4)=='i'&&line.charAt(5)=='n'&&line.charAt(6)=='e'){
+			//getline
+			int S=line.indexOf('(');
+			int k = line.indexOf(')');
+			int l1=numeval(0,line.substring(S,k));
+			n=code.get(l1).length();
+		}
+		else {
+		for (int i = line.length() - 1; i >= 0; i--) {
+			if (line.charAt(i) == '1')
+				n += Math.pow(2, line.length() - i);
+		}
+		}
+		return n;
+	}
+	//evaluates strings cause there can be functions so that needs to be accounted for
+	
+	public static String Stringeval(String line) {
+		String s="";
+		if(line.length()>4&&line.charAt(0)=='i'&&line.charAt(1)=='n'&&line.charAt(2)=='p'&&line.charAt(3)=='u'&&line.charAt(4)=='t')
+			//input
+			s=kb.next();
+		else if(line.length()>11&&line.charAt(0)=='c'&&line.charAt(1)=='o'&&line.charAt(2)=='n'&&line.charAt(3)=='c'&&line.charAt(4)=='a'&&line.charAt(5)=='t'){
+			//concatenation
+			int S=line.indexOf('(');
+			int i=line.indexOf(',');
+			int k = line.indexOf(')');
+			String l1=line.substring(S,i);
+			String l2=line.substring(i,k);
+			s=l1+l2;
+		}
+		
+		else if(line.length()>12&&line.charAt(0)=='s'&&line.charAt(1)=='e'&&line.charAt(2)=='g'&&line.charAt(3)=='m'&&line.charAt(4)=='e'&&line.charAt(5)=='n'&&line.charAt(6)=='t'&&line.charAt(7)=='(') {
+			//segment. finds the 9 then the two commas and closing parens then sets n to the numeval of the substring of that line.
+			int S=line.indexOf('(');
+			int i=line.indexOf(',');
+			int j=line.substring(i++).indexOf(',');
+			int k = line.indexOf(')');
+			int l1=numeval(0,line.substring(S,i));
+			int l2=numeval(0,line.substring(i,j));
+			int l3=numeval(0,line.substring(j,k));
+			s=code.get(l3).substring(l1,l2);
+		}
+		else if (line.length()>7&&line.charAt(0)=='c'&&line.charAt(1)=='m'&&line.charAt(2)=='p') {
+			int i=line.indexOf(',');
+			int k = line.indexOf(')');
+			String s1=line.substring(4,i);
+			String s2=line.substring(i,k);
+			s=(s1.equals(s2))?"1":"0";
+			//cmp
+	}
+		else if(line.length()>11&&line.charAt(0)=='g'&&line.charAt(1)=='e'&&line.charAt(2)=='t'&&line.charAt(3)=='l'&&line.charAt(4)=='i'&&line.charAt(5)=='n'&&line.charAt(6)=='e'){
+			//getline
+			int S=line.indexOf('(');
+			int k = line.indexOf(')');
+			int l1=numeval(0,line.substring(S,k));
+			s=""+code.get(l1).length();
+		}
+
+		return s;
+	}
+	//ends it need to make a better error function
+	public static void error() {
+		System.out.println("You had an error");
+		int a = 1 / 0;
+	}
+}
